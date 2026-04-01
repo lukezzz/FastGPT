@@ -3,7 +3,6 @@ import { FormControl, Box, Input, Button } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import { LoginPageTypeEnum } from '@/web/support/user/login/constants';
 import { postRegister } from '@/web/support/user/api';
-import { useSendCode } from '@/web/support/user/hooks/useSendCode';
 import type { ResLogin } from '@/global/support/api/userRes';
 import { useToast } from '@fastgpt/web/hooks/useToast';
 import { postCreateApp } from '@/web/core/app/api';
@@ -28,9 +27,9 @@ interface Props {
 
 interface RegisterType {
   username: string;
+  teamName: string;
   password: string;
   password2: string;
-  code: string;
 }
 
 const RegisterForm = ({ setPageType, loginSuccess }: Props) => {
@@ -42,21 +41,17 @@ const RegisterForm = ({ setPageType, loginSuccess }: Props) => {
     register,
     handleSubmit,
     getValues,
-    watch,
     formState: { errors }
   } = useForm<RegisterType>({
     mode: 'onBlur'
   });
-  const username = watch('username');
-
-  const { SendCodeBox } = useSendCode({ type: 'register' });
 
   const { runAsync: onclickRegister, loading: requesting } = useRequest2(
-    async ({ username, password, code }: RegisterType) => {
+    async ({ username, password, teamName }: RegisterType) => {
       loginSuccess(
         await postRegister({
           username,
-          code,
+          teamName,
           password,
           inviterId: getInviterId(),
           bd_vid: getBdVId(),
@@ -101,16 +96,10 @@ const RegisterForm = ({ setPageType, loginSuccess }: Props) => {
     }
   };
 
-  const placeholder = feConfigs?.register_method
-    ?.map((item) => {
-      switch (item) {
-        case 'email':
-          return t('common:support.user.login.Email');
-        case 'phone':
-          return t('common:support.user.login.Phone number');
-      }
-    })
-    .join('/');
+  const placeholder = [
+    t('common:support.user.login.Username'),
+    t('common:support.user.login.Email')
+  ].join('/');
 
   return (
     <>
@@ -131,33 +120,20 @@ const RegisterForm = ({ setPageType, loginSuccess }: Props) => {
             size={'lg'}
             placeholder={placeholder}
             {...register('username', {
-              required: t('user:password.email_phone_void'),
-              pattern: {
-                value:
-                  /(^1[3456789]\d{9}$)|(^[A-Za-z0-9]+([_\.][A-Za-z0-9]+)*@([A-Za-z0-9\-]+\.)+[A-Za-z]{2,6}$)/,
-                message: t('user:password.email_phone_error')
-              }
+              required: t('common:error.username_empty')
             })}
           ></Input>
         </FormControl>
-        <FormControl
-          mt={6}
-          isInvalid={!!errors.code}
-          display={'flex'}
-          alignItems={'center'}
-          position={'relative'}
-        >
+        <FormControl mt={6} isInvalid={!!errors.teamName}>
           <Input
             size={'lg'}
             bg={'myGray.50'}
-            flex={1}
-            maxLength={8}
-            placeholder={t('user:password.verification_code')}
-            {...register('code', {
-              required: t('user:password.code_required')
+            maxLength={100}
+            placeholder={t('user:team.Team Name')}
+            {...register('teamName', {
+              required: t('common:please_input_name')
             })}
           ></Input>
-          <SendCodeBox username={username} />
         </FormControl>
         <FormControl mt={6} isInvalid={!!errors.password}>
           <Input

@@ -26,12 +26,12 @@ import type {
 
 /* --------------- team  ---------------- */
 export const getTeamList = (status: `${TeamMemberSchema['status']}`) =>
-  GET<TeamTmbItemType[]>(`/proApi/support/user/team/list`, { status });
+  GET<TeamTmbItemType[]>(`/support/user/team/list`, { status });
 export const postCreateTeam = (data: CreateTeamProps) =>
-  POST<string>(`/proApi/support/user/team/create`, data);
+  POST<string>(`/support/user/team/create`, data);
 export const putUpdateTeam = (data: UpdateTeamProps) => PUT(`/support/user/team/update`, data);
 export const putSwitchTeam = (teamId: string) =>
-  PUT<string>(`/proApi/support/user/team/switch`, { teamId });
+  PUT<string>(`/support/user/team/switch`, { teamId });
 
 /* --------------- team member ---------------- */
 export const getTeamMembers = (

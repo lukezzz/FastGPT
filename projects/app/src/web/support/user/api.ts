@@ -34,17 +34,19 @@ export const ssoLogin = (params: any) => GET<ResLogin>('/proApi/support/user/acc
 export const postRegister = ({
   username,
   password,
-  code,
+  teamName,
   inviterId,
   bd_vid,
-  fastgpt_sem
+  fastgpt_sem,
+  sourceDomain
 }: AccountRegisterBody) =>
-  POST<ResLogin>(`/proApi/support/user/account/register/emailAndPhone`, {
+  POST<ResLogin>(`/support/user/account/register`, {
     username,
-    code,
+    teamName,
     inviterId,
     bd_vid,
     fastgpt_sem,
+    sourceDomain,
     password: hashStr(password)
   });
 
