@@ -19,6 +19,10 @@ yarn-error.log*
 
 # local env files
 .env*.local
+projects/app/.env
+scripts/openapi/.env
+plugins/model/pdf-mistral/.env
+plugins/webcrawler/.searchxng.env
 
 # vercel
 .vercel
@@ -42,6 +46,7 @@ docSite/.vercel
 .idea/
 files/helm/fastgpt/fastgpt-0.1.0.tgz
 files/helm/fastgpt/charts/*.tgz
+deploy/docker/docker-compose/docker-compose
 
 tmp/
 coverage
