@@ -135,7 +135,8 @@ export async function getUserDefaultTeam({ userId }: { userId: string }) {
     return Promise.reject('tmbId or userId is required');
   }
   return getTeamMember({
-    userId: new Types.ObjectId(userId)
+    userId: new Types.ObjectId(userId),
+    status: notLeaveStatus
   });
 }
 

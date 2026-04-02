@@ -43,7 +43,7 @@ export const getTeamMembers = (
     orgId?: string;
     groupId?: string;
   }>
-) => POST<PaginationResponse<TeamMemberItemType>>(`/proApi/support/user/team/member/list`, props);
+) => POST<PaginationResponse<TeamMemberItemType>>(`/support/user/team/member/list`, props);
 export const getTeamMemberCount = () =>
   GET<{ count: number }>(`/proApi/support/user/team/member/count`);
 
@@ -80,11 +80,11 @@ export const putForbidInvitationLink = (linkId: string) =>
 
 /* -------------- team collaborator -------------------- */
 export const getTeamClbs = () =>
-  GET<CollaboratorItemType[]>(`/proApi/support/user/team/collaborator/list`);
+  GET<CollaboratorItemType[]>(`/support/user/team/collaborator/list`);
 export const updateMemberPermission = (data: UpdateClbPermissionProps) =>
-  PUT('/proApi/support/user/team/collaborator/update', data);
+  PUT('/support/user/team/collaborator/update', data);
 export const deleteMemberPermission = (id: DeletePermissionQuery) =>
-  DELETE('/proApi/support/user/team/collaborator/delete', id);
+  DELETE('/support/user/team/collaborator/delete', id);
 
 /* --------------- team tags ---------------- */
 export const getTeamsTags = () => GET<TeamTagSchema[]>(`/proApi/support/user/team/tag/list`);

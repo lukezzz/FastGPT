@@ -20,7 +20,11 @@ async function handler(
 ): Promise<adminDeleteUserResponse> {
   await authSystemAdmin({ req });
 
-  const { userId } = req.body;
+  const params = {
+    ...(req.query || {}),
+    ...(req.body || {})
+  } as adminDeleteUserBody;
+  const userId = params.userId?.trim();
 
   if (!userId) {
     return Promise.reject(CommonErrEnum.invalidParams);

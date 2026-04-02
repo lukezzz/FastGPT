@@ -15,7 +15,6 @@ import dynamic from 'next/dynamic';
 
 import MemberListCard, { type MemberListCardProps } from './MemberListCard';
 import { useRequest2 } from '@fastgpt/web/hooks/useRequest';
-import { useSystemStore } from '@/web/common/system/useSystemStore';
 import { useConfirm } from '@fastgpt/web/hooks/useConfirm';
 import type { RequireOnlyOne } from '@fastgpt/global/common/type/utils';
 import { useTranslation } from 'next-i18next';
@@ -101,26 +100,21 @@ const CollaboratorContextProvider = ({
     refetchCollaboratorList();
   };
 
-  const { feConfigs } = useSystemStore();
-
   const {
     data: collaboratorList = [],
     runAsync: refetchCollaboratorList,
     loading: isFetchingCollaborator
   } = useRequest2(
     async () => {
-      if (feConfigs.isPlus) {
-        const data = await onGetCollaboratorList();
-        return data.map((item) => {
-          return {
-            ...item,
-            permission: new Permission({
-              per: item.permission.value
-            })
-          };
-        });
-      }
-      return [];
+      const data = await onGetCollaboratorList();
+      return data.map((item) => {
+        return {
+          ...item,
+          permission: new Permission({
+            per: item.permission.value
+          })
+        };
+      });
     },
     {
       manual: false,
