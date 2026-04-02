@@ -54,7 +54,7 @@ const AccountContainer = ({
       ? [
           {
             icon: 'support/user/usersLight',
-            label: 'Users',
+            label: t('account:users_manage'),
             value: TabEnum.users
           }
         ]

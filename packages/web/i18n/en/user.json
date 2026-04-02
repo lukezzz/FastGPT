@@ -159,4 +159,7 @@
   ,
   "admin.disable_user_confirm_title": "Disable User",
   "admin.disable_user_confirm_desc": "This will disable the user and clear their active sessions."
+  ,
+  "support.user.status.active": "Active",
+  "support.user.status.forbidden": "Disabled"
 }

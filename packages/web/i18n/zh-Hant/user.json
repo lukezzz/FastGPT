@@ -156,5 +156,7 @@
   "admin.unbind_user_confirm_title": "解除綁定使用者",
   "admin.unbind_user_confirm_desc": "此操作將從選定團隊移除該使用者。",
   "admin.disable_user_confirm_title": "停用使用者",
-  "admin.disable_user_confirm_desc": "此操作將停用該使用者並清除其已登入的工作階段。"
+  "admin.disable_user_confirm_desc": "此操作將停用該使用者並清除其已登入的工作階段。",
+  "support.user.status.active": "啟用",
+  "support.user.status.forbidden": "停用"
 }

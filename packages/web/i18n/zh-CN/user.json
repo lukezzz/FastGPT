@@ -155,5 +155,7 @@
   "admin.unbind_user_confirm_title": "解绑用户",
   "admin.unbind_user_confirm_desc": "该操作将从选定团队中移除该用户。",
   "admin.disable_user_confirm_title": "禁用用户",
-  "admin.disable_user_confirm_desc": "该操作将禁用该用户并清理其已登录会话。"
+  "admin.disable_user_confirm_desc": "该操作将禁用该用户并清理其已登录会话。",
+  "support.user.status.active": "启用",
+  "support.user.status.forbidden": "禁用"
 }
