@@ -55,6 +55,63 @@ async function getTeamMember(match: Record<string, any>): Promise<TeamTmbItemTyp
   };
 }
 
+async function createTeamWithOwner({
+  userId,
+  teamName,
+  avatar,
+  memberName,
+  notificationAccount,
+  session
+}: {
+  userId: string;
+  teamName: string;
+  avatar: string;
+  memberName: string;
+  notificationAccount?: string;
+  session: ClientSession;
+}) {
+  const [{ _id: insertedId }] = await MongoTeam.create(
+    [
+      {
+        ownerId: userId,
+        name: teamName,
+        avatar,
+        notificationAccount,
+        createTime: new Date()
+      }
+    ],
+    { session }
+  );
+
+  const [tmb] = await MongoTeamMember.create(
+    [
+      {
+        teamId: insertedId,
+        userId,
+        name: memberName,
+        role: TeamMemberRoleEnum.owner,
+        status: TeamMemberStatusEnum.active,
+        createTime: new Date()
+      }
+    ],
+    { session }
+  );
+
+  await MongoMemberGroupModel.create(
+    [
+      {
+        teamId: tmb.teamId,
+        name: DefaultGroupName,
+        avatar
+      }
+    ],
+    { session }
+  );
+  await createRootOrg({ teamId: tmb.teamId, session });
+
+  return tmb;
+}
+
 export const getTeamOwner = async (teamId: string) => {
   const tmb = await MongoTeamMember.findOne({
     teamId,
@@ -78,7 +135,8 @@ export async function getUserDefaultTeam({ userId }: { userId: string }) {
     return Promise.reject('tmbId or userId is required');
   }
   return getTeamMember({
-    userId: new Types.ObjectId(userId)
+    userId: new Types.ObjectId(userId),
+    status: notLeaveStatus
   });
 }
 
@@ -86,11 +144,15 @@ export async function createDefaultTeam({
   userId,
   teamName = 'My Team',
   avatar = '/icon/logo.svg',
+  memberName = 'Owner',
+  notificationAccount,
   session
 }: {
   userId: string;
   teamName?: string;
   avatar?: string;
+  memberName?: string;
+  notificationAccount?: string;
   session: ClientSession;
 }) {
   // auth default team
@@ -99,49 +161,62 @@ export async function createDefaultTeam({
   });
 
   if (!tmb) {
-    // create team
-    const [{ _id: insertedId }] = await MongoTeam.create(
-      [
-        {
-          ownerId: userId,
-          name: teamName,
-          avatar,
-          createTime: new Date()
-        }
-      ],
-      { session }
-    );
-    // create team member
-    const [tmb] = await MongoTeamMember.create(
-      [
-        {
-          teamId: insertedId,
-          userId,
-          name: 'Owner',
-          role: TeamMemberRoleEnum.owner,
-          status: TeamMemberStatusEnum.active,
-          createTime: new Date()
-        }
-      ],
-      { session }
-    );
-    // create default group
-    await MongoMemberGroupModel.create(
-      [
-        {
-          teamId: tmb.teamId,
-          name: DefaultGroupName,
-          avatar
-        }
-      ],
-      { session }
-    );
-    await createRootOrg({ teamId: tmb.teamId, session });
+    const tmb = await createTeamWithOwner({
+      userId,
+      teamName,
+      avatar,
+      memberName,
+      notificationAccount,
+      session
+    });
     console.log('create default team, group and root org', userId);
     return tmb;
   } else {
     console.log('default team exist', userId);
   }
+}
+
+export async function createTeam({
+  userId,
+  teamName,
+  avatar = '/icon/logo.svg',
+  memberName = 'Owner',
+  notificationAccount
+}: {
+  userId: string;
+  teamName: string;
+  avatar?: string;
+  memberName?: string;
+  notificationAccount?: string;
+}) {
+  return mongoSessionRun(async (session) => {
+    return createTeamWithOwner({
+      userId,
+      teamName,
+      avatar,
+      memberName,
+      notificationAccount,
+      session
+    });
+  });
+}
+
+export async function getUserTeamList({
+  userId,
+  status
+}: {
+  userId: string;
+  status?: `${TeamMemberStatusEnum}`;
+}) {
+  const list = await MongoTeamMember.find(
+    {
+      userId: new Types.ObjectId(userId),
+      ...(status ? { status } : {})
+    },
+    '_id'
+  ).lean();
+
+  return Promise.all(list.map((item) => getTeamMember({ _id: item._id })));
 }
 
 export async function updateTeam({

@@ -14,7 +14,7 @@ export const getOrgList = (params: {
   orgId: string;
   withPermission?: boolean;
   searchKey?: string;
-}) => POST<OrgListItemType[]>(`/proApi/support/user/team/org/list`, params);
+}) => POST<OrgListItemType[]>(`/support/user/team/org/list`, params);
 
 export const postCreateOrg = (data: postCreateOrgData) =>
   POST('/proApi/support/user/team/org/create', data);
