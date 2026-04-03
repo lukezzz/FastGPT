@@ -1,25 +1,22 @@
 import { SystemConfigsTypeEnum } from '@fastgpt/global/common/system/config/constants';
 import { MongoSystemConfigs } from './schema';
 import { type FastGPTConfigFileType } from '@fastgpt/global/common/system/types';
-import { FastGPTProUrl } from '../constants';
 import { type LicenseDataType } from '@fastgpt/global/common/system/types';
+
+export const getLatestFastGPTConfig = async () => {
+  return MongoSystemConfigs.findOne({
+    type: SystemConfigsTypeEnum.fastgpt
+  }).sort({
+    createTime: -1
+  });
+};
 
 export const getFastGPTConfigFromDB = async (): Promise<{
   fastgptConfig: FastGPTConfigFileType;
   licenseData?: LicenseDataType;
 }> => {
-  if (!FastGPTProUrl) {
-    return {
-      fastgptConfig: {} as FastGPTConfigFileType
-    };
-  }
-
   const [fastgptConfig, licenseConfig] = await Promise.all([
-    MongoSystemConfigs.findOne({
-      type: SystemConfigsTypeEnum.fastgpt
-    }).sort({
-      createTime: -1
-    }),
+    getLatestFastGPTConfig(),
     MongoSystemConfigs.findOne({
       type: SystemConfigsTypeEnum.license
     }).sort({
@@ -43,12 +40,27 @@ export const getFastGPTConfigFromDB = async (): Promise<{
   };
 };
 
+export const upsertFastGPTConfig = async (value: FastGPTConfigFileType) => {
+  const latest = await getLatestFastGPTConfig();
+
+  if (latest) {
+    latest.value = value as Record<string, any>;
+    await latest.save();
+    return latest;
+  }
+
+  const [created] = await MongoSystemConfigs.create([
+    {
+      type: SystemConfigsTypeEnum.fastgpt,
+      value
+    }
+  ]);
+
+  return created;
+};
+
 export const updateFastGPTConfigBuffer = async () => {
-  const res = await MongoSystemConfigs.findOne({
-    type: SystemConfigsTypeEnum.fastgpt
-  }).sort({
-    createTime: -1
-  });
+  const res = await getLatestFastGPTConfig();
 
   if (!res) return;
 
@@ -59,11 +71,7 @@ export const updateFastGPTConfigBuffer = async () => {
 };
 
 export const reloadFastGPTConfigBuffer = async () => {
-  const res = await MongoSystemConfigs.findOne({
-    type: SystemConfigsTypeEnum.fastgpt
-  }).sort({
-    createTime: -1
-  });
+  const res = await getLatestFastGPTConfig();
   if (!res) return;
   global.systemInitBufferId = res.createTime.getTime().toString();
 };

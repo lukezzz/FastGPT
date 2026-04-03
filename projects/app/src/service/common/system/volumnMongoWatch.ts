@@ -23,9 +23,11 @@ const reloadConfigWatch = () => {
   changeStream.on('change', async (change) => {
     try {
       if (
-        (change.operationType === 'insert' &&
-          change.fullDocument.type === SystemConfigsTypeEnum.fastgptPro) ||
-        change.operationType === 'update'
+        ['insert', 'replace', 'update'].includes(change.operationType) &&
+        (!change.operationType ||
+          change.operationType === 'update' ||
+          change.fullDocument?.type === SystemConfigsTypeEnum.fastgpt ||
+          change.fullDocument?.type === SystemConfigsTypeEnum.fastgptPro)
       ) {
         await initSystemConfig();
         console.log('refresh system config');

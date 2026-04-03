@@ -36,7 +36,10 @@ vi.mock(import('@/service/common/system'), async (importOriginal) => {
     initSystemConfig: async () => {
       // read env from projects/app/.env
 
-      const str = readFileSync('projects/app/.env.local', 'utf-8');
+      const envFile = existsSync('projects/app/.env.local')
+        ? 'projects/app/.env.local'
+        : 'projects/app/.env';
+      const str = readFileSync(envFile, 'utf-8');
       const lines = str.split('\n');
       const systemEnv: Record<string, string> = {};
       for (const line of lines) {
@@ -45,7 +48,25 @@ vi.mock(import('@/service/common/system'), async (importOriginal) => {
           systemEnv[key] = value;
         }
       }
+      const { getFastGPTConfigFromDB } = await import(
+        '@fastgpt/service/common/system/config/controller'
+      );
+      const { fastgptConfig } = await getFastGPTConfigFromDB();
+      const entraConfig = fastgptConfig.authConfigs?.sso?.entra;
+
       global.systemEnv = systemEnv as any;
+      global.authConfigs = fastgptConfig.authConfigs;
+      global.feConfigs = {
+        ...(global.feConfigs || {}),
+        ...(fastgptConfig.feConfigs || {}),
+        sso: entraConfig?.enabled
+          ? {
+              enabled: true,
+              provider: 'entra',
+              title: entraConfig.title || 'Microsoft Entra ID'
+            }
+          : undefined
+      } as any;
 
       return;
     }
@@ -73,10 +94,32 @@ beforeAll(async () => {
     }
     global.systemEnv.oneapiUrl = systemEnv['OPENAI_BASE_URL'];
     global.systemEnv.chatApiKey = systemEnv['CHAT_API_KEY'];
+    if (systemEnv['ROOT_KEY']) {
+      vi.stubEnv('ROOT_KEY', systemEnv['ROOT_KEY']);
+    }
+    if (systemEnv['FILE_TOKEN_KEY']) {
+      vi.stubEnv('FILE_TOKEN_KEY', systemEnv['FILE_TOKEN_KEY']);
+    }
+  } else if (existsSync('projects/app/.env')) {
+    const str = readFileSync('projects/app/.env', 'utf-8');
+    const lines = str.split('\n');
+    for (const line of lines) {
+      const [key, value] = line.split('=');
+      if (!key || !value || key.startsWith('#')) continue;
+      if (key === 'ROOT_KEY') {
+        vi.stubEnv('ROOT_KEY', value);
+      }
+      if (key === 'FILE_TOKEN_KEY') {
+        vi.stubEnv('FILE_TOKEN_KEY', value);
+      }
+    }
   }
   global.feConfigs = {
     isPlus: false
   } as any;
+  global.authConfigs = {} as any;
+  global.systemActiveModelList = [] as any;
+  global.systemDefaultModel = {} as any;
   await setupModels();
 });
 

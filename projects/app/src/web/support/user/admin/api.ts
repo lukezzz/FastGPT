@@ -75,3 +75,17 @@ export const postAdminResetPassword = (data: { userId: string; newPassword: stri
 
 export const delAdminDeleteTeam = (data: { teamId: string }) =>
   DELETE('/support/user/admin/team/delete', data);
+
+export type AdminSSOConfig = {
+  enabled: boolean;
+  tenantId: string;
+  clientId: string;
+  clientSecret: string;
+  title: string;
+};
+
+export const getAdminSSOConfig = () =>
+  GET<AdminSSOConfig>('/support/user/admin/sso/config', {}, { maxQuantity: 1 });
+
+export const putAdminSSOConfig = (data: AdminSSOConfig) =>
+  PUT<AdminSSOConfig>('/support/user/admin/sso/config', data);

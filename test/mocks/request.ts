@@ -93,6 +93,45 @@ vi.mock(import('@fastgpt/service/support/permission/controller'), async (importO
   };
 });
 
+vi.mock(import('@fastgpt/service/support/user/session'), async (importOriginal) => {
+  const mod = await importOriginal();
+  const sessionStore = new Map<
+    string,
+    {
+      userId: string;
+      teamId: string;
+      tmbId: string;
+      isRoot?: boolean;
+      createdAt: number;
+      ip?: string | null;
+    }
+  >();
+
+  return {
+    ...mod,
+    createUserSession: vi.fn(async ({ userId, teamId, tmbId, isRoot, ip }) => {
+      const key = `${userId}:test-session`;
+      sessionStore.set(key, {
+        userId,
+        teamId,
+        tmbId,
+        isRoot,
+        ip,
+        createdAt: Date.now()
+      });
+      return key;
+    }),
+    authUserSession: vi.fn(async (key: string) => {
+      const session = sessionStore.get(key);
+      if (!session) {
+        return Promise.reject(Error('unAuthorization'));
+      }
+      return session;
+    }),
+    delUserAllSession: vi.fn(async () => {})
+  };
+});
+
 vi.mock(
   import('@fastgpt/service/support/permission/memberGroup/controllers'),
   async (importOriginal) => {

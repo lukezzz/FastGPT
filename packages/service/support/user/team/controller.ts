@@ -157,7 +157,8 @@ export async function createDefaultTeam({
 }) {
   // auth default team
   const tmb = await MongoTeamMember.findOne({
-    userId: new Types.ObjectId(userId)
+    userId: new Types.ObjectId(userId),
+    status: notLeaveStatus
   });
 
   if (!tmb) {

@@ -1,4 +1,5 @@
 import type {
+  FastGPTAuthConfigsType,
   FastGPTFeConfigsType,
   LicenseDataType,
   SystemEnvType
@@ -20,6 +21,7 @@ declare global {
   var systemVersion: string;
   var feConfigs: FastGPTFeConfigsType;
   var systemEnv: SystemEnvType;
+  var authConfigs: FastGPTAuthConfigsType | undefined;
   var subPlans: SubPlanType | undefined;
   var licenseData: LicenseDataType | undefined;
 

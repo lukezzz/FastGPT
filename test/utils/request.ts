@@ -8,8 +8,12 @@ export async function Call<B = any, Q = any, R = any>(
 ) {
   const { body = {}, query = {}, ...rest } = props || {};
   let raw;
+  const headers = new Map<string, any>();
   const res: any = {
-    setHeader: vi.fn(),
+    setHeader: vi.fn((key: string, value: any) => {
+      headers.set(key, value);
+    }),
+    getHeader: vi.fn((key: string) => headers.get(key)),
     write: vi.fn((data: any) => {
       raw = data;
     }),
@@ -25,11 +29,13 @@ export async function Call<B = any, Q = any, R = any>(
   )) as any;
   return {
     ...response,
-    raw
+    raw,
+    headers: Object.fromEntries(headers.entries())
   } as {
     code: number;
     data: R;
     error?: any;
     raw?: any;
+    headers?: Record<string, any>;
   };
 }

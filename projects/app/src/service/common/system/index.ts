@@ -1,7 +1,11 @@
 import { initHttpAgent } from '@fastgpt/service/common/middle/httpAgent';
 import fs, { existsSync } from 'fs';
-import type { FastGPTFeConfigsType } from '@fastgpt/global/common/system/types/index.d';
-import type { FastGPTConfigFileType } from '@fastgpt/global/common/system/types/index.d';
+import type {
+  EntraSSOPublicConfigType,
+  FastGPTAuthConfigsType,
+  FastGPTConfigFileType,
+  FastGPTFeConfigsType
+} from '@fastgpt/global/common/system/types/index.d';
 import { getFastGPTConfigFromDB } from '@fastgpt/service/common/system/config/controller';
 import { FastGPTProUrl } from '@fastgpt/service/common/system/constants';
 import { isProduction } from '@fastgpt/global/common/system/constants';
@@ -143,6 +147,18 @@ export async function initSystemConfig() {
   global.licenseData = licenseData;
 
   const fileRes = json5.parse(fileConfig) as FastGPTConfigFileType;
+  const authConfigs: FastGPTAuthConfigsType = {
+    ...fileRes.authConfigs,
+    ...(fastgptConfig.authConfigs || {})
+  };
+  const entraConfig = authConfigs?.sso?.entra;
+  const publicSsoConfig: EntraSSOPublicConfigType | undefined = entraConfig?.enabled
+    ? {
+        enabled: true,
+        provider: 'entra',
+        title: entraConfig.title || 'Microsoft Entra ID'
+      }
+    : undefined;
 
   // get config from database
   const config: FastGPTConfigFileType = {
@@ -154,12 +170,14 @@ export async function initSystemConfig() {
       show_aiproxy: !!process.env.AIPROXY_API_ENDPOINT,
       show_coupon: process.env.SHOW_COUPON === 'true',
       show_dataset_enhance: licenseData?.functions?.datasetEnhance,
-      show_batch_eval: licenseData?.functions?.batchEval
+      show_batch_eval: licenseData?.functions?.batchEval,
+      sso: publicSsoConfig
     },
     systemEnv: {
       ...fileRes.systemEnv,
       ...(fastgptConfig.systemEnv || {})
     },
+    authConfigs,
     subPlans: fastgptConfig.subPlans
   };
 

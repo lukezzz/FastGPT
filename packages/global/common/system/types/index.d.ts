@@ -19,6 +19,26 @@ export type NavbarItemType = {
   isActive: boolean;
 };
 
+export type EntraSSOPublicConfigType = {
+  enabled?: boolean;
+  provider?: 'entra';
+  title?: string;
+};
+
+export type EntraSSOPrivateConfigType = {
+  enabled?: boolean;
+  tenantId?: string;
+  clientId?: string;
+  clientSecret?: string;
+  title?: string;
+};
+
+export type FastGPTAuthConfigsType = {
+  sso?: {
+    entra?: EntraSSOPrivateConfigType;
+  };
+};
+
 export type ExternalProviderWorkflowVarType = {
   name: string;
   key: string;
@@ -31,6 +51,7 @@ export type ExternalProviderWorkflowVarType = {
 export type FastGPTConfigFileType = {
   feConfigs: FastGPTFeConfigsType;
   systemEnv: SystemEnvType;
+  authConfigs?: FastGPTAuthConfigsType;
   subPlans?: SubPlanType;
 
   // Abandon
@@ -86,12 +107,7 @@ export type FastGPTFeConfigsType = {
   scripts?: { [key: string]: string }[];
   favicon?: string;
 
-  sso?: {
-    icon?: string;
-    title?: string;
-    url?: string;
-    autoLogin?: boolean;
-  };
+  sso?: EntraSSOPublicConfigType;
   oauth?: {
     github?: string;
     google?: string;

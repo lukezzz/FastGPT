@@ -4,13 +4,14 @@ import { useSystemStore } from '@/web/common/system/useSystemStore';
 import type { ResLogin } from '@/global/support/api/userRes.d';
 import { useUserStore } from '@/web/support/user/useUserStore';
 import { clearToken } from '@/web/support/user/auth';
-import { oauthLogin } from '@/web/support/user/api';
+import { oauthLogin, postSSOCallbackLogin } from '@/web/support/user/api';
 import { useToast } from '@fastgpt/web/hooks/useToast';
 import Loading from '@fastgpt/web/components/common/MyLoading';
 import { serviceSideProps } from '@/web/common/i18n/utils';
 import { getErrText } from '@fastgpt/global/common/error/utils';
 import { useTranslation } from 'next-i18next';
 import { OAuthEnum } from '@fastgpt/global/support/user/constant';
+import { getWebReqUrl } from '@fastgpt/web/common/system/utils';
 import {
   getBdVId,
   getFastGPTSem,
@@ -41,17 +42,23 @@ const provider = () => {
   );
 
   const authProps = useCallback(
-    async (props: Record<string, string>) => {
+    async (props: Record<string, string>, currentState?: string) => {
       try {
-        const res = await oauthLogin({
-          type: loginStore?.provider || OAuthEnum.sso,
-          props,
-          callbackUrl: `${location.origin}/login/provider`,
-          inviterId: getInviterId(),
-          bd_vid: getBdVId(),
-          fastgpt_sem: getFastGPTSem(),
-          sourceDomain: getSourceDomain()
-        });
+        const res =
+          loginStore?.provider === OAuthEnum.sso || (!loginStore?.provider && currentState)
+            ? await postSSOCallbackLogin({
+                code: props.code,
+                state: currentState || ''
+              })
+            : await oauthLogin({
+                type: loginStore?.provider || OAuthEnum.sso,
+                props,
+                callbackUrl: `${location.origin}${getWebReqUrl('/login/provider')}`,
+                inviterId: getInviterId(),
+                bd_vid: getBdVId(),
+                fastgpt_sem: getFastGPTSem(),
+                sourceDomain: getSourceDomain()
+              });
 
         if (!res) {
           toast({
@@ -89,7 +96,6 @@ const provider = () => {
       return;
     }
 
-    console.log('SSO', { initd, loginStore, props, state });
     if (!props || !initd) return;
 
     if (isOauthLogging) return;
@@ -100,7 +106,7 @@ const provider = () => {
       await clearToken();
       router.prefetch('/dashboard/apps');
 
-      if (loginStore && loginStore.provider !== 'sso' && state !== loginStore.state) {
+      if (loginStore && loginStore.provider !== OAuthEnum.sso && state !== loginStore.state) {
         toast({
           status: 'warning',
           title: t('common:support.user.login.security_failed')
@@ -110,7 +116,7 @@ const provider = () => {
         }, 1000);
         return;
       } else {
-        authProps(props);
+        authProps(props, state);
       }
     })();
   }, [initd, authProps, error, loginStore, loginStore?.state, router, state, t, toast, props]);

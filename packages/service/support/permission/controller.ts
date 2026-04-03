@@ -347,15 +347,22 @@ export async function parseHeaderCert({
 
 /* set cookie */
 export const TokenName = 'fastgpt_token';
+export const appendSetCookie = (res: NextApiResponse, cookie: string) => {
+  const currentCookie = res.getHeader('Set-Cookie');
+  const cookieList = Array.isArray(currentCookie)
+    ? currentCookie
+    : currentCookie
+      ? [String(currentCookie)]
+      : [];
+
+  res.setHeader('Set-Cookie', [...cookieList, cookie]);
+};
 export const setCookie = (res: NextApiResponse, token: string) => {
-  res.setHeader(
-    'Set-Cookie',
-    `${TokenName}=${token}; Path=/; HttpOnly; Max-Age=604800; Samesite=Strict;`
-  );
+  appendSetCookie(res, `${TokenName}=${token}; Path=/; HttpOnly; Max-Age=604800; Samesite=Strict;`);
 };
 /* clear cookie */
 export const clearCookie = (res: NextApiResponse) => {
-  res.setHeader('Set-Cookie', `${TokenName}=; Path=/; Max-Age=0`);
+  appendSetCookie(res, `${TokenName}=; Path=/; Max-Age=0`);
 };
 
 /* file permission */

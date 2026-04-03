@@ -13,6 +13,7 @@ import { useSystem } from '@fastgpt/web/hooks/useSystem';
 export enum TabEnum {
   'info' = 'info',
   'users' = 'users',
+  'sso' = 'sso',
   'promotion' = 'promotion',
   'usage' = 'usage',
   'bill' = 'bill',
@@ -56,6 +57,11 @@ const AccountContainer = ({
             icon: 'support/user/usersLight',
             label: t('account:users_manage'),
             value: TabEnum.users
+          },
+          {
+            icon: 'common/settingLight',
+            label: t('account:sso'),
+            value: TabEnum.sso
           }
         ]
       : []),

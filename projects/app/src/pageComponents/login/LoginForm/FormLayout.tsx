@@ -4,17 +4,17 @@ import { AbsoluteCenter, Box, Button, Flex } from '@chakra-ui/react';
 import { LOGO_ICON } from '@fastgpt/global/common/system/constants';
 import { OAuthEnum } from '@fastgpt/global/support/user/constant';
 import { useRouter } from 'next/router';
-import { type Dispatch, useCallback, useEffect, useMemo, useRef } from 'react';
+import { type Dispatch, useCallback, useMemo, useRef } from 'react';
 import { useTranslation } from 'next-i18next';
 import I18nLngSelector from '@/components/Select/I18nLngSelector';
 import { useSystem } from '@fastgpt/web/hooks/useSystem';
 import MyImage from '@fastgpt/web/components/common/Image/MyImage';
-import { checkIsWecomTerminal } from '@fastgpt/global/support/user/login/constants';
 import { getNanoid } from '@fastgpt/global/common/string/tools';
 import Avatar from '@fastgpt/web/components/common/Avatar';
 import dynamic from 'next/dynamic';
-import { POST } from '@/web/common/api/request';
 import { getBdVId } from '@/web/support/marketing/utils';
+import { getSSOAuthUrl } from '@/web/support/user/api';
+import { getWebReqUrl } from '@fastgpt/web/common/system/utils';
 
 interface Props {
   children: React.ReactNode;
@@ -33,24 +33,21 @@ type OAuthItem = {
 const FormLayout = ({ children, setPageType, pageType }: Props) => {
   const { t } = useTranslation();
   const router = useRouter();
-  const rootLogin = router.query.rootLogin === '1';
 
   const { setLoginStore, feConfigs } = useSystemStore();
   const { isPc } = useSystem();
 
   const { lastRoute = '/dashboard/apps' } = router.query as { lastRoute: string };
   const state = useRef(getNanoid(8));
-  const redirectUri = `${location.origin}/login/provider`;
-
-  const isWecomWorkTerminal = checkIsWecomTerminal();
+  const redirectUri = `${location.origin}${getWebReqUrl('/login/provider')}`;
 
   const oAuthList: OAuthItem[] = [
-    ...(feConfigs?.sso?.url
+    ...(feConfigs?.sso?.enabled
       ? [
           {
-            label: feConfigs.sso.title || 'Unknown',
+            label: feConfigs.sso.title || 'Microsoft Entra ID',
             provider: OAuthEnum.sso,
-            icon: feConfigs.sso.icon
+            icon: 'common/microsoft'
           }
         ]
       : []),
@@ -107,18 +104,12 @@ const FormLayout = ({ children, setPageType, pageType }: Props) => {
       : [])
   ];
 
-  const show_oauth = useMemo(
-    () => !getBdVId() && !!(feConfigs?.sso?.url || oAuthList.length > 0),
-    [feConfigs?.sso?.url, oAuthList.length]
-  );
+  const show_oauth = useMemo(() => !getBdVId() && oAuthList.length > 0, [oAuthList.length]);
 
   const onClickOauth = useCallback(
     async (item: OAuthItem) => {
       if (item.provider === OAuthEnum.sso) {
-        const redirectUrl = await POST<string>('/proApi/support/user/account/login/getAuthURL', {
-          redirectUri,
-          isWecomWorkTerminal
-        });
+        const redirectUrl = await getSSOAuthUrl({ redirectUri });
         setLoginStore({
           provider: item.provider as OAuthEnum,
           lastRoute,
@@ -137,16 +128,8 @@ const FormLayout = ({ children, setPageType, pageType }: Props) => {
       }
       item.pageType && setPageType(item.pageType);
     },
-    [lastRoute, router, setLoginStore, setPageType]
+    [lastRoute, redirectUri, router, setLoginStore, setPageType]
   );
-
-  // Auto login
-  useEffect(() => {
-    if (rootLogin) return;
-    const sso = oAuthList.find((item) => item.provider === OAuthEnum.sso);
-    // sso auto login
-    if (sso && (feConfigs?.sso?.autoLogin || isWecomWorkTerminal)) onClickOauth(sso);
-  }, [rootLogin, feConfigs?.sso?.autoLogin, isWecomWorkTerminal, onClickOauth]);
 
   return (
     <Flex flexDirection={'column'} h={'100%'}>

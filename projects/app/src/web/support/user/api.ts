@@ -30,6 +30,10 @@ export const oauthLogin = (params: OauthLoginProps) =>
 export const postFastLogin = (params: FastLoginProps) =>
   POST<ResLogin>('/proApi/support/user/account/login/fastLogin', params);
 export const ssoLogin = (params: any) => GET<ResLogin>('/proApi/support/user/account/sso', params);
+export const getSSOAuthUrl = (params: { redirectUri: string }) =>
+  POST<string>('/support/user/account/login/sso/authUrl', params);
+export const postSSOCallbackLogin = (params: { code: string; state: string }) =>
+  POST<ResLogin>('/support/user/account/login/sso/callback', params);
 
 export const postRegister = ({
   username,

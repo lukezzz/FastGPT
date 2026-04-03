@@ -17,6 +17,7 @@ export const initFastGPTConfig = (config?: FastGPTConfigFileType) => {
 
   global.feConfigs = config.feConfigs;
   global.systemEnv = config.systemEnv;
+  global.authConfigs = config.authConfigs;
   global.subPlans = config.subPlans;
 };
 
